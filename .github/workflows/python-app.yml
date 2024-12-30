@@ -1,4 +1,4 @@
-name: Python CI
+name: Python CI with Docker
 
 on:
   push:
@@ -25,4 +25,24 @@ jobs:
         pip install -r requirements.txt
 
     - name: Run tests
-      run: python -m unittest discover tests
+      run: python -m unittest discover -s tests -p "*.py"
+
+  docker-build-and-push:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build Docker image
+      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/github-actions-python:latest .
+
+    - name: Push Docker image to Docker Hub
+      run: docker push ${{ secrets.DOCKER_USERNAME }}/github-actions-python:latest
